@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Category;
 use App\Models\Week;
 use App\Models\Track;
 use App\Players\Player;
@@ -35,29 +36,33 @@ class TrackController extends Controller
      */
     public function create(UserService $user): View
     {
+        $categories = Category::all();
+
         return view('app.tracks.create', [
             'week' => Week::current(),
             'remaining_tracks_count' => $user->remainingTracksCount(),
+            'categories' => $categories,
         ]);
     }
+
+
 
     /**
      * Create a new track.
      */
     public function store(Request $request, Player $player): RedirectResponse
     {
-        $this->authorize('create', Track::class);
 
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'artist' => ['required', 'string', 'max:255'],
             'url' => ['required', 'url', new PlayerUrl()],
+            'category' => ['required', 'string'],
         ]);
 
-        DB::beginTransaction();
-
-        // Set track title, artist and url
         $track = new Track($validated);
+        $track->category = $validated['category'];
+
 
         // Set track's user + week
         $track->user()->associate($request->user());
