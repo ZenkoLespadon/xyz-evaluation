@@ -7,13 +7,22 @@ use Illuminate\Database\Seeder;
 
 class CategorySeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     *
-     * @return void
-     */
     public function run()
     {
-        Category::factory()->count(10)->create();
+        $categories = [
+            'Soul',
+            'Ambient',
+            'Pop',
+            'Rap',
+            'Funk',
+            'Rock',
+            'Reggae / Dub',
+            'Techno',
+            'Electro'
+        ];
+
+        foreach ($categories as $category) {
+            Category::firstOrCreate(['name' => $category]);
+        }
     }
 }

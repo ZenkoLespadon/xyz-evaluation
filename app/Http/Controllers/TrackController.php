@@ -11,8 +11,10 @@ use App\Services\UserService;
 use App\Exceptions\PlayerException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
+
 
 class TrackController extends Controller
 {
@@ -45,52 +47,33 @@ class TrackController extends Controller
         ]);
     }
 
+    public function store(Request $request)
+    {
+        // Validation des données
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'artist' => 'required|string|max:255',
+            'url' => 'required|url',
+            'category_id' => 'nullable|exists:categories,id', // Validation pour la catégorie
+        ]);
+
+        // Création de la contribution
+        Track::create([
+            'title' => $request->title,
+            'artist' => $request->artist,
+            'url' => $request->url,
+            'category_id' => $request->category_id,
+            'user_id' => Auth::id(),
+            'week_id' => 7,
+        ]);
+
+        return redirect()->route('app.tracks.store')->with('success', 'Contribution ajoutée avec succès !');
+    }
 
 
     /**
      * Create a new track.
      */
-    public function store(Request $request, Player $player): RedirectResponse
-    {
-
-        $validated = $request->validate([
-            'title' => ['required', 'string', 'max:255'],
-            'artist' => ['required', 'string', 'max:255'],
-            'url' => ['required', 'url', new PlayerUrl()],
-            'category' => ['required', 'string'],
-        ]);
-
-        $track = new Track($validated);
-        $track->category = $validated['category'];
-
-
-        // Set track's user + week
-        $track->user()->associate($request->user());
-        $track->week()->associate(Week::current());
-
-        try {
-            // Fetch track detail from provider (YT, SC)
-            $details = $player->details($track->url);
-
-            // Set player_id, track_id and thumbnail_url
-            $track->player = $details->player_id;
-            $track->player_track_id = $details->track_id;
-            $track->player_thumbnail_url = $details->thumbnail_url;
-
-            // Publish track
-            $track->save();
-
-            DB::commit();
-        } catch (PlayerException $th) {
-            DB::rollBack();
-            throw $th;
-        }
-
-        return redirect()->route('app.tracks.show', [
-            'week' => $track->week->uri,
-            'track' => $track,
-        ]);
-    }
 
     /**
      * Toggle like.

@@ -8,16 +8,8 @@ use App\Models\Week;
 use Database\Samples\TrackSamples;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-/**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Track>
- */
 class TrackFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
     public function definition(): array
     {
         // Between yesterday and ~6 previous weeks
@@ -31,13 +23,10 @@ class TrackFactory extends Factory
             'url' => fake()->randomElement(['https://youtube.com/watch?v=ID', 'https://soundcloud/USER/TRACK']),
             'created_at' => $published_at,
             'updated_at' => $published_at,
-            'category_id' => Category::factory(),
+            'category_id' => Category::all()->random()->id,
         ];
     }
 
-    /**
-     * Get track from real sample.
-     */
     public function sample()
     {
         return $this->state(function (array $attributes) {
